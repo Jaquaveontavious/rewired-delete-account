@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delete Account – Rewired</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2d2d44;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+    }
+    .icon { font-size: 32px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #f1f5f9; }
+    .subtitle { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 28px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8;
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="email"] {
+      width: 100%; padding: 12px 14px; background: #0f0f14;
+      border: 1px solid #2d2d44; border-radius: 10px; color: #f1f5f9;
+      font-size: 14px; margin-bottom: 16px; outline: none; transition: border-color 0.2s;
+    }
+    input[type="email"]:focus { border-color: #7c3aed; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 24px; }
+    input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px;
+      accent-color: #ef4444; flex-shrink: 0; cursor: pointer; }
+    .checkbox-row span { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+    button {
+      width: 100%; padding: 14px; background: #ef4444; color: white;
+      font-size: 15px; font-weight: 700; border: none; border-radius: 12px;
+      cursor: pointer; transition: background 0.2s, opacity 0.2s;
+    }
+    button:hover { background: #dc2626; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .message {
+      display: none; border-radius: 12px; padding: 16px; text-align: center;
+      font-size: 14px; font-weight: 500; margin-top: 16px; line-height: 1.6;
+    }
+    .message.success {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #4ade80;
+    }
+    .message.error {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
+    }
+    .note { font-size: 11px; color: #475569; margin-top: 20px; text-align: center; }
+    a { color: #7c3aed; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🗑️</div>
+    <h1>Delete Your Account</h1>
+    <p class="subtitle">
+      Enter your registered email address. We'll permanently delete your account,
+      all your posts, and any associated data. This action cannot be undone.
+    </p>
+
+    <form id="deleteForm">
+      <label for="email">Email address</label>
+      <input type="email" id="email" placeholder="your@email.com" required />
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="confirm" required />
+        <span>I understand this permanently deletes my account and all my data.</span>
+      </div>
+
+      <button type="submit" id="submitBtn">Delete My Account</button>
+    </form>
+
+    <div class="message success" id="successMsg">
+      ✅ Your account has been deleted.<br />
+      All your data has been permanently removed.
+    </div>
+    <div class="message error" id="errorMsg"></div>
+
+    <p class="note">
+      Need help? <a href="mailto:ohlookitsajake@gmail.com">ohlookitsajake@gmail.com</a>
+    </p>
+  </div>
+
+  <script>
+    // Replace this with your Supabase project URL
+    const SUPABASE_FUNCTION_URL = 'https://ofpopcbjsbtrmtwlanmd.supabase.co/functions/v1/delete-account';
+
+    document.getElementById('deleteForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const btn = document.getElementById('submitBtn');
+      const successMsg = document.getElementById('successMsg');
+      const errorMsg = document.getElementById('errorMsg');
+
+      btn.disabled = true;
+      btn.textContent = 'Deleting…';
+      errorMsg.style.display = 'none';
+
+      try {
+        const res = await fetch(SUPABASE_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        if (res.ok) {
+          document.getElementById('deleteForm').style.display = 'none';
+          successMsg.style.display = 'block';
+        } else {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Account not found or already deleted.');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Delete My Account';
+        errorMsg.textContent = '❌ ' + err.message;
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
